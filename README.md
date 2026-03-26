@@ -1,2 +1,2 @@
 # UICompiler
-UICompiler
+An AI-driven system that converts natural language into production-ready frontend code. It generates structured UI schemas, enforces best practices, and compiles them into scalable, maintainable React components with consistent layouts, design tokens, and reusable architecture. Designed for reliability, it produces multiple optimized variants with validation, scoring, and deterministic rendering for real-world deployment.
