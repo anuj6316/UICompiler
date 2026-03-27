@@ -16,7 +16,7 @@ const FeatureCard = ({ icon: Icon, title, description }: { icon: any, title: str
     <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-900 dark:text-zinc-100 mb-6 transition-colors duration-500 group-hover:scale-110 transition-transform duration-300">
       <Icon className="w-6 h-6" />
     </div>
-    <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-3 transition-colors duration-500">{title}</h3>
+    <h3 className="text-xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mb-3 transition-colors duration-500">{title}</h3>
     <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed transition-colors duration-500">
       {description}
     </p>

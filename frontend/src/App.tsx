@@ -231,12 +231,12 @@ export default function App() {
                   <ArrowLeft className="w-4 h-4" /> Back to Sign In
                 </button>
               )}
-              <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white transition-colors duration-500">
+              <h2 className="text-3xl font-medium tracking-tight text-zinc-900 dark:text-white transition-colors duration-500">
                 {isResetting ? (isVerifying ? 'Create New Password' : 'Reset Password') 
                   : isVerifying ? 'Verify your email'
                   : isSignUp ? 'Create an account' : 'Sign in'}
               </h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 transition-colors duration-500">
+              <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400 transition-colors duration-500">
                 {isResetting && !isVerifying ? 'Enter your email to receive a reset code.' : 
                  isVerifying ? 'Enter the 6-digit code sent to your email.' :
                  isSignUp ? 'Enter your details below to create your account' : 'Enter your email and password to access your account'}

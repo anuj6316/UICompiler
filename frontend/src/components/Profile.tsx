@@ -16,7 +16,7 @@ export default function Profile({ onBack }: { onBack: () => void }) {
 
   const fetchProfile = async () => {
     try {
-      const response: any = await api.get('/auth/profile/');
+      const response: any = await api.get('/auth/get_user_details/');
       setUser(response.data);
       setFormData({
         first_name: response.data.first_name || '',
@@ -35,7 +35,8 @@ export default function Profile({ onBack }: { onBack: () => void }) {
     setIsSaving(true);
     setMessage({ type: '', text: '' });
     try {
-      const response: any = await api.patch('/auth/profile/', formData);
+      // Using PATCH for partial updates
+      const response: any = await api.patch('/auth/get_user_details/', formData);
       setUser(response.data);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (err: any) {
@@ -80,9 +81,6 @@ export default function Profile({ onBack }: { onBack: () => void }) {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Workspace
           </button>
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-xs font-medium text-zinc-500">
-            Account ID: #{user?.id}
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -93,14 +91,8 @@ export default function Profile({ onBack }: { onBack: () => void }) {
               <div className="w-24 h-24 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-full mx-auto flex items-center justify-center text-3xl font-bold mb-4 shadow-xl">
                 {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
               </div>
-              <h2 className="text-xl font-semibold">{user?.first_name} {user?.last_name}</h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{user?.email}</p>
-              
-              {user?.is_email_verified && (
-                <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-medium border border-green-100 dark:border-green-900/30">
-                  <CheckCircle className="w-3 h-3" /> Verified
-                </div>
-              )}
+              <h2 className="text-xl font-medium tracking-tight transition-colors duration-500">{user?.first_name} {user?.last_name}</h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 transition-colors duration-500">{user?.email}</p>
             </div>
 
             {message.text && (
@@ -121,7 +113,7 @@ export default function Profile({ onBack }: { onBack: () => void }) {
             <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 transition-all duration-500">
               <div className="flex items-center gap-3 mb-8">
                 <User className="w-5 h-5 text-zinc-400" />
-                <h3 className="text-lg font-semibold">Personal Information</h3>
+                <h3 className="text-lg font-medium tracking-tight transition-colors duration-500">Personal Information</h3>
               </div>
               
               <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -168,7 +160,7 @@ export default function Profile({ onBack }: { onBack: () => void }) {
             <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 transition-all duration-500">
               <div className="flex items-center gap-3 mb-8">
                 <Shield className="w-5 h-5 text-zinc-400" />
-                <h3 className="text-lg font-semibold">Security & Password</h3>
+                <h3 className="text-lg font-medium tracking-tight transition-colors duration-500">Security & Password</h3>
               </div>
               
               <form onSubmit={handleChangePassword} className="space-y-6">

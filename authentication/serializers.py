@@ -57,6 +57,10 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
 
         return attr
 
+class UserDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'username', 'email']
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()

@@ -93,3 +93,14 @@ class AuthViewSet(viewsets.ViewSet):
             return Response({"msg": "Password reset successfully"}, status=status.HTTP_200_OK)
         return Response({"msg": "Something went wrong", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['get', 'patch'], permission_classes = [IsAuthenticated])
+    def get_user_details(self, request):
+        if request.method == 'GET':
+            serializer = UserDetailsSerializer(request.user)
+            return Response({"msg": "User details fetched successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+        elif request.method == 'PATCH':
+            serializer = UserDetailsSerializer(request.user, data=request.data, partial=True)
+            if serializer.is_valid():
+                custom_user = serializer.save()
+                return Response({"msg": "User details updated successfully", "data": UserDetailsSerializer(custom_user).data}, status=status.HTTP_200_OK)
+        return Response({"msg": "Something went wrong", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
