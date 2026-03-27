@@ -1,0 +1,61 @@
+mindmap@mindmap-System-Product-Name:~/Desktop/UICompiler$ uv run main.py 
+Loading weights: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 351/351 [00:00<00:00, 1372.19it/s]
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB17-page1_0.92.jpg user
+perform ocr on the image
+assistant
+The image contains the following text:
+
+```
+Date of hire:
+0 3/1 0 1 / 2 0 2
+```
+
+The text in the image is in a standard font, and the numbers are in a clear, legible font. The text appears to be a table or a
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB09-page2_0.92.jpg user
+perform ocr on the image
+assistant
+The image shows a text with the following content:
+
+```
+Date of hire:
+2 3 / 0 4 / 2 0 1 9
+```
+
+The OCR (Optical Character Recognition) process has been performed, and the text has been converted to a readable format. Here
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB03-page1_0.90.jpg user
+perform ocr on the image
+assistant
+The image contains the following text:
+
+```
+Date of hire: 09/02/2012
+```
+
+The text has been transcribed as OCR (Optical Character Recognition) to convert the image data into a readable format. The date format used is day/month/year, which is a
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB01-page1_0.89.jpg user
+perform ocr on the image
+assistant
+Date of hire: 12/11/2021
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB21-page1_0.89.jpg user
+perform ocr on the image
+assistant
+Date of hire: 12/11/2021
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB15-page1_0.92.jpg user
+perform ocr on the image
+assistant
+Date of hire: 01/01 02/22
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB13-page2_0.92.jpg user
+perform ocr on the image
+assistant
+The image you've provided appears to be a simple text-based image with a date and a series of numbers. Here's the OCR (Optical Character Recognition) of the text in the image:
+
+```
+Date of hire:
+12 09 20 21
+```
+
+This text seems to be a date
+/home/mindmap/Desktop/UICompiler/FInal_Folders_Crops/DTHR/SB02-page1_0.90.jpg user
+perform ocr on the image
+assistant
+Date of hire: 14/01/17

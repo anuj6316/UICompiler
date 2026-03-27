@@ -5,3 +5,18 @@ __pycache__/*
 
 *.pyc
 .env
+
+.venv/
+.venv/*
+
+new 4/
+new 4/*
+
+node_modules/
+node_modules/*
+
+.vscode/
+.vscode/*
+
+.idea/
+.idea/*
