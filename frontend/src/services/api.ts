@@ -1,93 +1,103 @@
 import { env } from '../config/env';
 
 /**
- * Core API Service with Automatic Token Refresh
+ * Core API Service
+ * 
+ * This service provides a centralized way to make HTTP requests to your backend.
+ * It automatically uses the `apiUrl` defined in your environment configuration.
  */
 
 interface FetchOptions extends RequestInit {
-  // Add any custom options here
+  requireAuth?: boolean;
 }
 
-// Helper to get tokens
-const getAccessToken = () => localStorage.getItem('access_token');
-const getRefreshToken = () => localStorage.getItem('refresh_token');
-
 async function fetchWithConfig(endpoint: string, options: FetchOptions = {}) {
-  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${env.apiUrl}${path}`;
+  const { requireAuth = true, ...fetchOptions } = options;
+  
+  // Ensure the apiUrl has a protocol
+  let baseUrl = env.apiUrl;
+  if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    // If it looks like localhost or a domain, prepend http://
+    if (baseUrl.includes(':') || baseUrl.includes('.')) {
+      baseUrl = `http://${baseUrl}`;
+    }
+  }
 
-  const headers = new Headers(options.headers);
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+  // Ensure the endpoint starts with a slash if it doesn't already
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${baseUrl}${path}`;
+
+  // Set up default headers (e.g., Content-Type, Authorization)
+  const headers = new Headers(fetchOptions.headers);
+  
+  headers.set('Accept', 'application/json');
+  
+  // Add ngrok skip warning header for ngrok URLs
+  if (env.apiUrl.includes('ngrok-free.dev')) {
+    headers.set('ngrok-skip-browser-warning', 'true');
+  }
+
+  if (!headers.has('Content-Type') && !(fetchOptions.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
 
-  // Automatically add Auth Token if available
-  const token = getAccessToken();
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+  // Add an auth token if required and available
+  if (requireAuth) {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
   }
 
-  let config: RequestInit = {
-    ...options,
+  const config: RequestInit = {
+    ...fetchOptions,
     headers,
+    mode: 'cors',
+    credentials: 'include',
+    referrerPolicy: 'no-referrer',
   };
 
   try {
-    let response = await fetch(url, config);
+    const response = await fetch(url, config);
 
-    // --- AUTOMATIC TOKEN REFRESH LOGIC ---
-    // If we get a 401 (Unauthorized) and we have a refresh token, try to get a new access token
-    if (response.status === 401 && getRefreshToken() && !endpoint.includes('/auth/login')) {
-      console.log('Access token expired, attempting refresh...');
-      
-      const refreshResponse = await fetch(`${env.apiUrl}/auth/token/refresh/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh: getRefreshToken() }),
-      });
-
-      if (refreshResponse.ok) {
-        const refreshData = await refreshResponse.json();
-        localStorage.setItem('access_token', refreshData.access);
-        
-        // Retry the original request with the new token
-        headers.set('Authorization', `Bearer ${refreshData.access}`);
-        response = await fetch(url, { ...config, headers });
-      } else {
-        // Refresh failed (refresh token expired/invalid) -> Log user out
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/'; // Or trigger a state change in App.tsx
-      }
-    }
-
+    // Handle HTTP errors
     if (!response.ok) {
-      let errorMessage = `Error: ${response.status}`;
+      // Try to parse error message from backend if it exists
+      let errorMessage = `API Error: ${response.status} ${response.statusText}`;
       try {
         const errorData = await response.json();
-        // Django REST Framework often returns errors in different structures
         if (errorData.msg) errorMessage = errorData.msg;
-        else if (errorData.detail) errorMessage = errorData.detail;
-        else if (errorData.data) errorMessage = JSON.stringify(errorData.data);
-      } catch (e) { }
+        else if (errorData.message) errorMessage = errorData.message;
+      } catch (e) {
+        // Ignore JSON parse errors for error responses
+      }
       throw new Error(errorMessage);
     }
 
+    // Return JSON or null if no content
     if (response.status === 204) return null;
     return await response.json();
     
   } catch (error) {
-    console.error(`[API Error] ${options.method || 'GET'} ${url}:`, error);
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      console.error(`[Network Error] ${fetchOptions.method || 'GET'} ${url}: The request was blocked or the server is unreachable. This is often caused by CORS issues, an inactive ngrok tunnel, or a missing browser warning bypass.`);
+      throw new Error('Network error: Unable to reach the server. Please check your connection or the backend status.');
+    }
+    console.error(`[API Error] ${fetchOptions.method || 'GET'} ${url}:`, error);
     throw error;
   }
 }
 
+// Export convenient methods for common HTTP verbs
 export const api = {
   get: <T>(endpoint: string, options?: FetchOptions): Promise<T> => 
     fetchWithConfig(endpoint, { ...options, method: 'GET' }),
 
-  post: <T>(endpoint: string, data?: any, options?: FetchOptions): Promise<T> => 
-    fetchWithConfig(endpoint, { ...options, method: 'POST', body: data ? JSON.stringify(data) : undefined }),
+  post: <T>(endpoint: string, data: any, options?: FetchOptions): Promise<T> => 
+    fetchWithConfig(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }),
+
+  postFormData: <T>(endpoint: string, data: FormData, options?: FetchOptions): Promise<T> => 
+    fetchWithConfig(endpoint, { ...options, method: 'POST', body: data }),
 
   put: <T>(endpoint: string, data: any, options?: FetchOptions): Promise<T> => 
     fetchWithConfig(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),

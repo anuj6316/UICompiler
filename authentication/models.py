@@ -8,8 +8,11 @@ from django.utils import timezone
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=255, null=True, blank=True)
+    profile_img = models.ImageField(null=True, blank=True)
+    backcover_img = models.ImageField(null=True, blank=True)
     is_email_verified = models.BooleanField(default=False)
     verification_token = models.UUIDField(default=uuid.uuid4, editable=False)
+
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'username']

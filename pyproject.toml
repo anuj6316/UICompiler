@@ -5,8 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "accelerate>=1.13.0",
-    "bitsandbytes>=0.49.2",
     "django>=6.0.3",
     "django-cors-headers>=4.9.0",
     "djangorestframework>=3.17.1",
@@ -16,8 +14,5 @@ dependencies = [
     "opencv-python>=4.13.0.92",
     "pillow>=12.1.1",
     "poethepoet>=0.42.1",
-    "torch>=2.11.0",
-    "torchvision>=0.26.0",
-    "transformers>=5.4.0",
 ]
 

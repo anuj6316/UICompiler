@@ -9,7 +9,7 @@ export const env = {
   // Frontend Variables (Must be prefixed with VITE_)
   // Accessible in the browser
   appName: import.meta.env.VITE_APP_NAME || 'UICompiler',
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  apiUrl: (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, ''),
   
   // Environment Flags
   isDev: import.meta.env.DEV,

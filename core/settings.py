@@ -41,7 +41,7 @@ SECRET_KEY = 'django-insecure-(yw&5ptwqe2r8itl)3cxyz-gw4%^v@8n&pm_%w_90lnrp+=c)x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['echoless-spectrologically-teresa.ngrok-free.dev', 'localhost', '127.0.0.1']
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
@@ -96,8 +96,21 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "https://ais-dev-wpggz2pbpzbutiwi5pte7t-396700701981.asia-southeast1.run.app",
+    "https://ais-pre-wpggz2pbpzbutiwi5pte7t-396700701981.asia-southeast1.run.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "https://echoless-spectrologically-teresa.ngrok-free.dev",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "ngrok-skip-browser-warning",
 ]
 
 ROOT_URLCONF = 'core.urls'

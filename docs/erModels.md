@@ -256,3 +256,5 @@ I can give you:
 
 * **PostgreSQL schema with constraints + JSON schema validation**
 * or **optimized query patterns for history + pagination (important for your PRD)**
+
+

@@ -31,7 +31,7 @@ class SignupSerializer(serializers.ModelSerializer):
         EmailOTP.objects.filter(email=user.email).delete()
         return user
 
-class ChangePasswordSerializer(serializers.ModelSerializer):
+class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
     confirm_password = serializers.CharField(required=True)
@@ -41,7 +41,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Passwords do not match')
         return attr
 
-class ResetPasswordSerializer(serializers.ModelSerializer):
+class ResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     otp = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
@@ -60,7 +60,7 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
 class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username', 'email']
+        fields = ['first_name', 'last_name', 'username', 'email', 'is_email_verified']
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -79,7 +79,3 @@ class LoginSerializer(serializers.Serializer):
         attrs['refresh_token'] = str(refresh)
         attrs['access_token'] = str(refresh.access_token)
         return attrs
-
-    class Meta:
-        model = CustomUser
-        fields = ['email', 'password']

@@ -6,8 +6,8 @@ django-cors-headers
 langchain-ollama
 langchain
 
-transformers
-torch
-torchvision
-pillow
-accelerate
+# transformers
+# torch
+# torchvision
+# pillow
+# accelerate
