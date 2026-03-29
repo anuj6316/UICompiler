@@ -73,15 +73,49 @@ generated_outputs
 
 ## 2. Relationships (important)
 
-```id="4z0nqf"
-User (1) ─── (N) Generations
+[![Entity Relationship Diagram](https://storage.googleapis.com/second-petal-295822.appspot.com/elements/elements%3A4cc0dc52c699e7b487443b16d20066d287098eb51e403a5b03943d5860e20d56.png)](https://app.eraser.io/new?requestId=sEdh0VzzHMpDN1QMcOME&state=P5yVfDdlqSEXxOeyhUUGc)
 
-Generation (1) ─── (N) WireframeVariants
+*[✍️ Edit this diagram in Eraser](https://app.eraser.io/new?requestId=sEdh0VzzHMpDN1QMcOME&state=P5yVfDdlqSEXxOeyhUUGc)*
 
-Generation (1) ─── (1) Selected Variant (via FK)
+<details>
+<summary>View Eraser DSL Code</summary>
 
-Selected Variant (1) ─── (1) GeneratedOutput
+```eraser
+USERS [icon: user, color: blue] {
+  id uuid pk
+  email string
+  password_hash string
+}
+
+GENERATIONS [icon: image, color: purple] {
+  id uuid pk
+  user_id uuid
+  image_path string
+  status string
+  selected_variant_id uuid
+}
+
+WIREFRAME_VARIANTS [icon: layout, color: green] {
+  id uuid pk
+  generation_id uuid
+  layout_json jsonb
+  label string
+  score float
+}
+
+GENERATED_OUTPUTS [icon: file-code, color: orange] {
+  id uuid pk
+  generation_id uuid
+  variant_id uuid
+  jsx_code text
+}
+
+USERS.id < GENERATIONS.user_id
+GENERATIONS.id < WIREFRAME_VARIANTS.generation_id
+GENERATIONS.selected_variant_id > WIREFRAME_VARIANTS.id
+WIREFRAME_VARIANTS.id < GENERATED_OUTPUTS.variant_id
 ```
+</details>
 
 ---
 
@@ -132,15 +166,30 @@ class GeneratedOutput(models.Model):
 
 ## 5. State machine (VERY important)
 
-```id="n6zz6w"
-pending
-  ↓
-wireframe_generated
-  ↓ (user selects)
-variant_selected
-  ↓
-completed
+[![State Machine](https://storage.googleapis.com/second-petal-295822.appspot.com/elements/elements%3A7017d777861d9d2d6a6698b315774fb34585c8a62ad078dd3f8cea04c75aec5f.png)](https://app.eraser.io/new?requestId=mX1qBpbUxZxmoltHxmbu&state=PTOaxhMNX5TZppgMspfoX)
+
+*[✍️ Edit this diagram in Eraser](https://app.eraser.io/new?requestId=mX1qBpbUxZxmoltHxmbu&state=PTOaxhMNX5TZppgMspfoX)*
+
+<details>
+<summary>View Eraser DSL Code</summary>
+
+```eraser
+pending [icon: clock]
+wireframe_generated [icon: layout]
+variant_selected [icon: check-circle]
+completed [icon: check]
+failed [icon: alert-triangle, color: red]
+
+pending > wireframe_generated: "AI Vision analyzes layout"
+pending > failed: "Error (Unreadable image)"
+
+wireframe_generated > variant_selected: "User selects best variant"
+wireframe_generated > failed: "Error (Timeout)"
+
+variant_selected > completed: "AI generates React code"
+variant_selected > failed: "Error (Compilation failed)"
 ```
+</details>
 
 ---
 

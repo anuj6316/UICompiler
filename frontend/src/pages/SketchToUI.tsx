@@ -1,15 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Wand2, Download, Trash2, Undo, Redo, ChevronLeft, MousePointer2, 
+  Wand2, Download, Trash2, Undo, Redo, ChevronLeft, ChevronRight, MousePointer2, 
   PenTool, Square, Circle as CircleIcon, Type, Image as ImageIcon, 
   Play, Code2, Smartphone, Monitor, Tablet, Palette, ChevronDown, 
   CheckCircle2, Loader2, Copy, Check, ExternalLink, History as HistoryIcon,
-  Settings, HelpCircle, LogOut, User, Eye, Code, Search, Command, Sliders
+  Settings, HelpCircle, LogOut, User, Eye, Code, Search, Command, Sliders,
+  LayoutDashboard, Layers, Menu, X, ArrowLeft, Calendar
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useUser, getInitials } from '../contexts/UserContext';
 import { Stage, Layer, Line, Rect, Circle, Text as KonvaText, Transformer, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
 import { motion, AnimatePresence } from 'motion/react';
+import { env } from '../config/env';
+import { useTheme } from '../contexts/ThemeContext';
+import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { 
   Button, Card, CardContent, CardHeader, CardTitle, 
   Tabs, TabsContent, TabsList, TabsTrigger, Progress, Badge, 
@@ -17,7 +22,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
   Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
-  Avatar, AvatarImage, AvatarFallback,
+  Avatar, AvatarFallback,
   CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem,
   Input, Textarea, Toaster
 } from '@/components/ui';
@@ -47,7 +52,7 @@ interface CanvasElement {
 }
 
 const THEMES = [
-  { id: 'modern', name: 'Modern', bg: 'bg-white dark:bg-[#09090B]', primary: 'bg-zinc-900 dark:bg-white', text: 'text-zinc-900 dark:text-zinc-200', secondary: 'bg-zinc-100 dark:bg-white/[0.05]', border: 'border-zinc-200 dark:border-white/[0.1]' },
+  { id: 'modern', name: 'Modern', bg: 'bg-white dark:bg-[#111113]', primary: 'bg-zinc-900 dark:bg-zinc-200', text: 'text-zinc-900 dark:text-zinc-200', secondary: 'bg-zinc-100 dark:bg-[#1e1e24]', border: 'border-zinc-200 dark:border-white/[0.1]' },
   { id: 'playful', name: 'Playful', bg: 'bg-yellow-50 dark:bg-purple-950', primary: 'bg-pink-500 dark:bg-pink-400', text: 'text-purple-900 dark:text-purple-100', secondary: 'bg-yellow-100 dark:bg-purple-900', border: 'border-yellow-200 dark:border-purple-800' },
   { id: 'corporate', name: 'Corporate', bg: 'bg-slate-50 dark:bg-slate-900', primary: 'bg-blue-700 dark:bg-blue-500', text: 'text-slate-900 dark:text-slate-100', secondary: 'bg-slate-200 dark:bg-slate-800', border: 'border-slate-300 dark:border-slate-700' },
   { id: 'minimal', name: 'Minimal', bg: 'bg-[#FAFAFA] dark:bg-black', primary: 'bg-black dark:bg-white', text: 'text-black dark:text-white', secondary: 'bg-gray-100 dark:bg-zinc-900', border: 'border-gray-200 dark:border-zinc-800' },
@@ -208,8 +213,15 @@ type GenerationState = 'idle' | 'processing_variants' | 'wireframe_generated' | 
 
 export default function SketchToUI() {
   const navigate = useNavigate();
+  const { user, logout } = useUser();
+  const { isDark, toggleTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  
+  // Sidebar & project state
+  const [projectName, setProjectName] = useState('Untitled Project');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const projectNameRef = useRef<HTMLInputElement>(null);
   
   const [elements, setElements] = useState<CanvasElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -540,9 +552,235 @@ export default function SketchToUI() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-white dark:bg-[#09090B] text-zinc-900 dark:text-zinc-200 font-sans overflow-hidden transition-colors duration-500">
+    <DashboardLayout
+      header={({ setIsMobileMenuOpen }) => (
+        <header className="h-16 border-b border-zinc-200 dark:border-white/[0.08] bg-white/80 dark:bg-[#111113]/80 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
+        <div className="flex items-center gap-4">
+          {/* Mobile menu button */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="lg:hidden p-2.5 bg-white dark:bg-[#1a1a1f] border border-zinc-200 dark:border-white/[0.08] rounded-none text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 shadow-sm dark:shadow-none"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          {/* Back button */}
+          <button 
+            onClick={() => navigate('/')}
+            className="hidden lg:flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-300 active:scale-[0.98]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+          <div className="h-6 w-px bg-zinc-200 dark:bg-white/[0.08] hidden lg:block" />
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="rounded-none text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5">Draft</Badge>
+            {isEditingName ? (
+              <input
+                ref={projectNameRef}
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                onBlur={() => setIsEditingName(false)}
+                onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingName(false); }}
+                className="text-xs font-semibold bg-transparent border border-zinc-300 dark:border-white/[0.1] px-2 py-1 rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 w-40"
+                autoFocus
+              />
+            ) : (
+              <span 
+                className="text-xs text-zinc-500 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                onClick={() => { setIsEditingName(true); setTimeout(() => projectNameRef.current?.select(), 0); }}
+                title="Click to edit project name"
+              >
+                {projectName}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Style & Font Selectors */}
+          <div className="hidden md:flex items-center gap-2 bg-zinc-100 dark:bg-[#1e1e24] p-1 rounded-none">
+            <Select value={theme.id} onValueChange={(val) => setTheme(THEMES.find(t => t.id === val) || THEMES[0])}>
+              <SelectTrigger className="h-8 w-[100px] rounded-none text-[10px] font-bold uppercase tracking-wider bg-transparent border-none hover:bg-white dark:hover:bg-white/[0.1] transition-all">
+                <Palette className="w-3 h-3 mr-2" />
+                <SelectValue placeholder="Theme" />
+              </SelectTrigger>
+              <SelectContent className="rounded-none border-zinc-200 dark:border-white/[0.08]">
+                {THEMES.map(t => (
+                  <SelectItem key={t.id} value={t.id} className="text-xs rounded-none">{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={font.id} onValueChange={(val) => setFont(FONTS.find(f => f.id === val) || FONTS[0])}>
+              <SelectTrigger className="h-8 w-[100px] rounded-none text-[10px] font-bold uppercase tracking-wider bg-transparent border-none hover:bg-white dark:hover:bg-white/[0.1] transition-all">
+                <Type className="w-3 h-3 mr-2" />
+                <SelectValue placeholder="Font" />
+              </SelectTrigger>
+              <SelectContent className="rounded-none border-zinc-200 dark:border-white/[0.08]">
+                {FONTS.map(f => (
+                  <SelectItem key={f.id} value={f.id} className="text-xs rounded-none">{f.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="h-6 w-px bg-zinc-200 dark:bg-[#222228] mx-1" />
+
+          {generated && (
+            <div className="flex items-center bg-zinc-100 dark:bg-[#1e1e24] p-1 rounded-none">
+              <button 
+                onClick={() => setDeviceMode('desktop')}
+                className={`p-2 rounded-none transition-all duration-300 ${deviceMode === 'desktop' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+              >
+                <Monitor className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setDeviceMode('tablet')}
+                className={`p-2 rounded-none transition-all duration-300 ${deviceMode === 'tablet' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+              >
+                <Tablet className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setDeviceMode('mobile')}
+                className={`p-2 rounded-none transition-all duration-300 ${deviceMode === 'mobile' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+              >
+                <Smartphone className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          
+          <Button 
+            onClick={handleGenerate}
+            disabled={generationState !== 'idle' || elements.length === 0}
+            className="rounded-none h-10 px-6 font-bold uppercase tracking-wider text-xs shadow-lg shadow-zinc-200 dark:shadow-none transition-all active:scale-95"
+          >
+            {generationState === 'processing_variants' ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Play className="w-4 h-4 mr-2 fill-current" />
+            )}
+            {generationState === 'processing_variants' ? 'Generating...' : 'Generate UI'}
+          </Button>
+
+          <div className="flex items-center gap-1">
+            <Sheet>
+              <SheetTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="w-10 h-10 rounded-none hover:bg-zinc-100 dark:hover:bg-white/[0.05]">
+                    <Sliders className="w-5 h-5" />
+                  </Button>
+                }
+              />
+              <SheetContent side="right" className="w-96 p-0 border-l border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#111113]">
+                <SheetHeader className="p-6 border-b border-zinc-200 dark:border-white/[0.08]">
+                  <SheetTitle className="text-sm font-bold uppercase tracking-widest">Advanced Configuration</SheetTitle>
+                  <SheetDescription className="text-xs">Customize your project's global styles and typography.</SheetDescription>
+                </SheetHeader>
+                <ScrollArea className="h-[calc(100vh-100px)]">
+                  <div className="p-8 space-y-10">
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Custom Theme</h4>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className={`h-7 text-[9px] rounded-none px-3 font-bold uppercase tracking-wider transition-all ${useCustomStyles ? 'bg-zinc-900 text-white dark:bg-zinc-200 dark:text-zinc-900' : ''}`}
+                          onClick={() => setUseCustomStyles(!useCustomStyles)}
+                        >
+                          {useCustomStyles ? 'Active' : 'Enable'}
+                        </Button>
+                      </div>
+                      
+                      <div className={`space-y-6 transition-all duration-500 ${useCustomStyles ? 'opacity-100' : 'opacity-40 grayscale pointer-events-none'}`}>
+                        {[
+                          { label: 'Primary', key: 'primary' },
+                          { label: 'Secondary', key: 'secondary' },
+                          { label: 'Background', key: 'bg' },
+                          { label: 'Text', key: 'text' }
+                        ].map((item) => (
+                          <div key={item.key} className="space-y-3">
+                            <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{item.label} Color</label>
+                            <div className="flex gap-3">
+                              <div className="relative w-12 h-10 rounded-none overflow-hidden border border-zinc-200 dark:border-white/[0.1]">
+                                <Input 
+                                  type="color" 
+                                  value={customTheme[item.key as keyof typeof customTheme]} 
+                                  onChange={(e) => setCustomTheme({...customTheme, [item.key]: e.target.value})}
+                                  className="absolute inset-0 w-[200%] h-[200%] -top-1/2 -left-1/2 cursor-pointer border-none p-0"
+                                />
+                              </div>
+                              <Input 
+                                type="text" 
+                                value={customTheme[item.key as keyof typeof customTheme]} 
+                                onChange={(e) => setCustomTheme({...customTheme, [item.key]: e.target.value})}
+                                className="flex-1 h-10 text-xs rounded-none border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-[#1a1a1f] font-mono"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Typography</h4>
+                      <div className={`space-y-6 transition-all duration-500 ${useCustomStyles ? 'opacity-100' : 'opacity-40 grayscale pointer-events-none'}`}>
+                        <div className="space-y-3">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Heading Font Family</label>
+                          <Input 
+                            type="text" 
+                            value={customTypography.headingFont} 
+                            onChange={(e) => setCustomTypography({...customTypography, headingFont: e.target.value})}
+                            placeholder="e.g. Playfair Display, Inter"
+                            className="h-10 text-xs rounded-none border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-[#1a1a1f]"
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Body Font Family</label>
+                          <Input 
+                            type="text" 
+                            value={customTypography.bodyFont} 
+                            onChange={(e) => setCustomTypography({...customTypography, bodyFont: e.target.value})}
+                            placeholder="e.g. Inter, Roboto"
+                            className="h-10 text-xs rounded-none border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-[#1a1a1f]"
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Base Font Size (px)</label>
+                          <Input 
+                            type="number" 
+                            value={customTypography.baseSize} 
+                            onChange={(e) => setCustomTypography({...customTypography, baseSize: parseInt(e.target.value)})}
+                            className="h-10 text-xs rounded-none border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-[#1a1a1f]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-6">
+                      <Button 
+                        className="w-full rounded-none h-12 text-xs font-bold uppercase tracking-widest shadow-xl shadow-zinc-200 dark:shadow-none transition-all active:scale-95"
+                        onClick={() => {
+                          toast.success('Advanced configuration applied!');
+                          setUseCustomStyles(true);
+                        }}
+                      >
+                        Apply Configuration
+                      </Button>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+    )}
+  >
+    <div className="flex-1 flex flex-col w-full h-full relative">
       <Toaster position="top-center" />
-      
       <CommandDialog open={isCommandOpen} onOpenChange={setIsCommandOpen}>
         <CommandInput placeholder="Type a command or search..." />
         <CommandList className="rounded-none border-none">
@@ -596,260 +834,21 @@ export default function SketchToUI() {
           </CommandGroup>
         </CommandList>
       </CommandDialog>
-      
-      {/* Minimalist Header */}
-      <header className="h-16 border-b border-zinc-200 dark:border-white/[0.05] bg-white/80 dark:bg-[#09090B]/80 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-10 h-10 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-500 shadow-lg shadow-zinc-200 dark:shadow-none">
-              <Wand2 className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-sm font-bold tracking-tight uppercase leading-none mb-0.5">SketchToUI</h1>
-              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">v2.0 Beta</span>
-            </div>
-          </div>
-          <div className="h-6 w-px bg-zinc-200 dark:bg-white/[0.1]" />
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="rounded-full text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5">Draft</Badge>
-            <span className="text-xs text-zinc-500 font-semibold">Untitled Project</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Style & Font Selectors */}
-          <div className="hidden md:flex items-center gap-2 bg-zinc-100 dark:bg-white/[0.05] p-1 rounded-2xl">
-            <Select value={theme.id} onValueChange={(val) => setTheme(THEMES.find(t => t.id === val) || THEMES[0])}>
-              <SelectTrigger className="h-8 w-[100px] rounded-xl text-[10px] font-bold uppercase tracking-wider bg-transparent border-none hover:bg-white dark:hover:bg-white/[0.1] transition-all">
-                <Palette className="w-3 h-3 mr-2" />
-                <SelectValue placeholder="Theme" />
-              </SelectTrigger>
-              <SelectContent className="rounded-2xl border-zinc-200 dark:border-white/[0.05]">
-                {THEMES.map(t => (
-                  <SelectItem key={t.id} value={t.id} className="text-xs rounded-xl">{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={font.id} onValueChange={(val) => setFont(FONTS.find(f => f.id === val) || FONTS[0])}>
-              <SelectTrigger className="h-8 w-[100px] rounded-xl text-[10px] font-bold uppercase tracking-wider bg-transparent border-none hover:bg-white dark:hover:bg-white/[0.1] transition-all">
-                <Type className="w-3 h-3 mr-2" />
-                <SelectValue placeholder="Font" />
-              </SelectTrigger>
-              <SelectContent className="rounded-2xl border-zinc-200 dark:border-white/[0.05]">
-                {FONTS.map(f => (
-                  <SelectItem key={f.id} value={f.id} className="text-xs rounded-xl">{f.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="h-6 w-px bg-zinc-200 dark:bg-white/[0.1] mx-1" />
-
-          {generated && (
-            <div className="flex items-center bg-zinc-100 dark:bg-white/[0.05] p-1 rounded-2xl">
-              <button 
-                onClick={() => setDeviceMode('desktop')}
-                className={`p-2 rounded-xl transition-all duration-300 ${deviceMode === 'desktop' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
-              >
-                <Monitor className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => setDeviceMode('tablet')}
-                className={`p-2 rounded-xl transition-all duration-300 ${deviceMode === 'tablet' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
-              >
-                <Tablet className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => setDeviceMode('mobile')}
-                className={`p-2 rounded-xl transition-all duration-300 ${deviceMode === 'mobile' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
-              >
-                <Smartphone className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-          
-          <Button 
-            onClick={handleGenerate}
-            disabled={generationState !== 'idle' || elements.length === 0}
-            className="rounded-2xl h-10 px-6 font-bold uppercase tracking-wider text-xs shadow-lg shadow-zinc-200 dark:shadow-none transition-all active:scale-95"
-          >
-            {generationState === 'processing_variants' ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Play className="w-4 h-4 mr-2 fill-current" />
-            )}
-            {generationState === 'processing_variants' ? 'Generating...' : 'Generate UI'}
-          </Button>
-
-          <div className="flex items-center gap-1">
-            <Sheet>
-              <SheetTrigger
-                render={
-                  <Button variant="ghost" size="icon" className="w-10 h-10 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/[0.05]">
-                    <Sliders className="w-5 h-5" />
-                  </Button>
-                }
-              />
-              <SheetContent side="right" className="w-96 p-0 border-l border-zinc-200 dark:border-white/[0.05] bg-white dark:bg-[#09090B]">
-                <SheetHeader className="p-6 border-b border-zinc-200 dark:border-white/[0.05]">
-                  <SheetTitle className="text-sm font-bold uppercase tracking-widest">Advanced Configuration</SheetTitle>
-                  <SheetDescription className="text-xs">Customize your project's global styles and typography.</SheetDescription>
-                </SheetHeader>
-                <ScrollArea className="h-[calc(100vh-100px)]">
-                  <div className="p-8 space-y-10">
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Custom Theme</h4>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className={`h-7 text-[9px] rounded-full px-3 font-bold uppercase tracking-wider transition-all ${useCustomStyles ? 'bg-zinc-900 text-white dark:bg-white dark:text-black' : ''}`}
-                          onClick={() => setUseCustomStyles(!useCustomStyles)}
-                        >
-                          {useCustomStyles ? 'Active' : 'Enable'}
-                        </Button>
-                      </div>
-                      
-                      <div className={`space-y-6 transition-all duration-500 ${useCustomStyles ? 'opacity-100' : 'opacity-40 grayscale pointer-events-none'}`}>
-                        {[
-                          { label: 'Primary', key: 'primary' },
-                          { label: 'Secondary', key: 'secondary' },
-                          { label: 'Background', key: 'bg' },
-                          { label: 'Text', key: 'text' }
-                        ].map((item) => (
-                          <div key={item.key} className="space-y-3">
-                            <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{item.label} Color</label>
-                            <div className="flex gap-3">
-                              <div className="relative w-12 h-10 rounded-xl overflow-hidden border border-zinc-200 dark:border-white/[0.1]">
-                                <Input 
-                                  type="color" 
-                                  value={customTheme[item.key as keyof typeof customTheme]} 
-                                  onChange={(e) => setCustomTheme({...customTheme, [item.key]: e.target.value})}
-                                  className="absolute inset-0 w-[200%] h-[200%] -top-1/2 -left-1/2 cursor-pointer border-none p-0"
-                                />
-                              </div>
-                              <Input 
-                                type="text" 
-                                value={customTheme[item.key as keyof typeof customTheme]} 
-                                onChange={(e) => setCustomTheme({...customTheme, [item.key]: e.target.value})}
-                                className="flex-1 h-10 text-xs rounded-xl border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-white/[0.02] font-mono"
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Typography</h4>
-                      <div className={`space-y-6 transition-all duration-500 ${useCustomStyles ? 'opacity-100' : 'opacity-40 grayscale pointer-events-none'}`}>
-                        <div className="space-y-3">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Heading Font Family</label>
-                          <Input 
-                            type="text" 
-                            value={customTypography.headingFont} 
-                            onChange={(e) => setCustomTypography({...customTypography, headingFont: e.target.value})}
-                            placeholder="e.g. Playfair Display, Inter"
-                            className="h-10 text-xs rounded-xl border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-white/[0.02]"
-                          />
-                        </div>
-
-                        <div className="space-y-3">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Body Font Family</label>
-                          <Input 
-                            type="text" 
-                            value={customTypography.bodyFont} 
-                            onChange={(e) => setCustomTypography({...customTypography, bodyFont: e.target.value})}
-                            placeholder="e.g. Inter, Roboto"
-                            className="h-10 text-xs rounded-xl border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-white/[0.02]"
-                          />
-                        </div>
-
-                        <div className="space-y-3">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Base Font Size (px)</label>
-                          <Input 
-                            type="number" 
-                            value={customTypography.baseSize} 
-                            onChange={(e) => setCustomTypography({...customTypography, baseSize: parseInt(e.target.value)})}
-                            className="h-10 text-xs rounded-xl border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-white/[0.02]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-6">
-                      <Button 
-                        className="w-full rounded-2xl h-12 text-xs font-bold uppercase tracking-widest shadow-xl shadow-zinc-200 dark:shadow-none transition-all active:scale-95"
-                        onClick={() => {
-                          toast.success('Advanced configuration applied!');
-                          setUseCustomStyles(true);
-                        }}
-                      >
-                        Apply Configuration
-                      </Button>
-                    </div>
-                  </div>
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button className="ml-2 outline-none group">
-                    <Avatar className="w-10 h-10 rounded-2xl border-2 border-transparent group-hover:border-zinc-900 dark:group-hover:border-white transition-all duration-500">
-                      <AvatarImage src="https://github.com/shadcn.png" />
-                      <AvatarFallback className="rounded-2xl text-[10px] font-bold">AJ</AvatarFallback>
-                    </Avatar>
-                  </button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-64 rounded-2xl border-zinc-200 dark:border-white/[0.05] bg-white/90 dark:bg-[#09090B]/90 backdrop-blur-xl p-2">
-                <div className="flex items-center gap-3 p-3">
-                  <Avatar className="w-10 h-10 rounded-xl">
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback className="rounded-xl">AJ</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold">Anuj Kumar</span>
-                    <span className="text-[10px] text-zinc-500">anuj@example.com</span>
-                  </div>
-                </div>
-                <DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/[0.05] mx-2" />
-                <DropdownMenuItem className="text-xs rounded-xl cursor-pointer p-3">
-                  <User className="w-4 h-4 mr-3" /> Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-xs rounded-xl cursor-pointer p-3">
-                  <Settings className="w-4 h-4 mr-3" /> Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-xs rounded-xl cursor-pointer p-3">
-                  <HelpCircle className="w-4 h-4 mr-3" /> Help & Support
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/[0.05] mx-2" />
-                <DropdownMenuItem className="text-xs rounded-xl cursor-pointer p-3 text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-500/10">
-                  <LogOut className="w-4 h-4 mr-3" /> Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
 
       {/* Main Workspace */}
       <div className="flex-1 flex overflow-hidden">
         
         {/* Left Panel: Canvas */}
-        <div className={`flex flex-col border-r border-zinc-200 dark:border-white/[0.05] bg-zinc-50/50 dark:bg-[#09090B] transition-all duration-500 relative ${generated ? 'w-1/2' : 'w-full'}`}>
+        <div className={`flex flex-col border-r border-zinc-200 dark:border-white/[0.08] bg-zinc-50/50 dark:bg-[#111113] transition-all duration-500 relative ${generated ? 'w-1/2' : 'w-full'}`}>
           {/* Subtle Grid Background */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]" 
                style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '24px 24px' }} 
           />
           
           {/* Canvas Area */}
-          <div ref={containerRef} className="flex-1 relative bg-zinc-50 dark:bg-[#09090B] overflow-hidden cursor-crosshair">
+          <div ref={containerRef} className="flex-1 relative bg-zinc-50 dark:bg-[#111113] overflow-hidden cursor-crosshair">
             {/* Floating Toolbar */}
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-white/[0.05] shadow-2xl">
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-none border border-zinc-200 dark:border-white/[0.08] shadow-lg">
               <div className="flex items-center gap-1">
                 <ToolButton icon={MousePointer2} active={tool === 'select'} onClick={() => setTool('select')} tooltip="Select (V)" />
                 <ToolButton icon={PenTool} active={tool === 'pen'} onClick={() => setTool('pen')} tooltip="Draw (P)" />
@@ -868,7 +867,7 @@ export default function SketchToUI() {
                 </div>
               </div>
 
-              <div className="w-px h-6 bg-zinc-200 dark:bg-white/[0.1] mx-1" />
+              <div className="w-px h-6 bg-zinc-200 dark:bg-[#222228] mx-1" />
 
               <div className="flex items-center gap-2">
                 {(tool === 'text' || (selectedId && elements.find(el => el.id === selectedId)?.type === 'text')) && (
@@ -882,7 +881,7 @@ export default function SketchToUI() {
                           setElements(elements.map(el => el.id === selectedId ? { ...el, fontSize: size } : el));
                         }
                       }}
-                      className="text-[10px] font-bold bg-transparent border border-zinc-200 dark:border-white/[0.1] rounded-lg px-2 h-8 outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white transition-all"
+                      className="text-[10px] font-bold bg-transparent border border-zinc-200 dark:border-white/[0.1] rounded-none px-2 h-8 outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white transition-all"
                     >
                       {[12, 14, 16, 18, 20, 24, 32, 48].map(s => <option key={s} value={s} className="bg-white dark:bg-zinc-900">{s}px</option>)}
                     </select>
@@ -895,7 +894,7 @@ export default function SketchToUI() {
                           setElements(elements.map(el => el.id === selectedId ? { ...el, fontFamily: family } : el));
                         }
                       }}
-                      className="text-[10px] font-bold bg-transparent border border-zinc-200 dark:border-white/[0.1] rounded-lg px-2 h-8 outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white transition-all"
+                      className="text-[10px] font-bold bg-transparent border border-zinc-200 dark:border-white/[0.1] rounded-none px-2 h-8 outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white transition-all"
                     >
                       <option value="sans-serif" className="bg-white dark:bg-zinc-900">Sans</option>
                       <option value="serif" className="bg-white dark:bg-zinc-900">Serif</option>
@@ -919,7 +918,7 @@ export default function SketchToUI() {
                         ));
                       }
                     }}
-                    className="w-6 h-6 rounded-lg cursor-pointer border-0 p-0 bg-transparent overflow-hidden shadow-sm"
+                    className="w-6 h-6 rounded-none cursor-pointer border-0 p-0 bg-transparent overflow-hidden shadow-sm"
                     title="Fill Color"
                   />
                   <button 
@@ -933,23 +932,23 @@ export default function SketchToUI() {
                         ));
                       }
                     }}
-                    className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${fillColor === 'transparent' ? 'border-zinc-900 dark:border-white bg-zinc-900 dark:bg-white' : 'border-zinc-200 dark:border-white/[0.1] hover:bg-zinc-100 dark:hover:bg-white/[0.05]'}`}
+                    className={`w-6 h-6 rounded-none border flex items-center justify-center transition-all ${fillColor === 'transparent' ? 'border-zinc-900 dark:border-white bg-zinc-900 dark:bg-zinc-200' : 'border-zinc-200 dark:border-white/[0.1] hover:bg-zinc-100 dark:hover:bg-white/[0.05]'}`}
                     title="Transparent Fill"
                   >
-                    <div className="w-full h-full relative overflow-hidden rounded-md">
-                      <div className={`absolute inset-0 ${fillColor === 'transparent' ? 'bg-zinc-900 dark:bg-white' : 'bg-white dark:bg-zinc-900'}`} />
+                    <div className="w-full h-full relative overflow-hidden rounded-none">
+                      <div className={`absolute inset-0 ${fillColor === 'transparent' ? 'bg-zinc-900 dark:bg-zinc-200' : 'bg-white dark:bg-zinc-900'}`} />
                       <div className="absolute top-0 left-0 w-full h-full border-t border-red-500 transform rotate-45 origin-top-left" />
                     </div>
                   </button>
                 </div>
               </div>
 
-              <div className="w-px h-6 bg-zinc-200 dark:bg-white/[0.1] mx-1" />
+              <div className="w-px h-6 bg-zinc-200 dark:bg-[#222228] mx-1" />
 
               <div className="flex items-center gap-1">
                 <ToolButton icon={Undo} active={false} onClick={undo} tooltip="Undo (Ctrl+Z)" />
                 <ToolButton icon={Redo} active={false} onClick={redo} tooltip="Redo (Ctrl+Y)" />
-                <div className="w-px h-4 bg-zinc-200 dark:bg-white/[0.1] mx-1" />
+                <div className="w-px h-4 bg-zinc-200 dark:bg-[#222228] mx-1" />
                 <ToolButton icon={Trash2} active={false} onClick={clearCanvas} tooltip="Clear Canvas" />
               </div>
             </div>
@@ -1018,7 +1017,7 @@ export default function SketchToUI() {
                         rotate: [0, 5, -5, 0]
                       }}
                       transition={{ duration: 4, repeat: Infinity }}
-                      className="absolute inset-0 bg-zinc-100 dark:bg-white/[0.05] rounded-[2rem] rotate-6" 
+                      className="absolute inset-0 bg-zinc-100 dark:bg-[#1e1e24] rounded-none rotate-6" 
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <PenTool className="w-10 h-10 text-zinc-400 dark:text-zinc-500" />
@@ -1029,9 +1028,9 @@ export default function SketchToUI() {
                     Draw your ideas directly on the canvas. Use the floating toolbar above to select shapes and tools.
                   </p>
                   <div className="mt-8 flex items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                    <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">P</kbd> Pen</span>
-                    <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">R</kbd> Rect</span>
-                    <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">T</kbd> Text</span>
+                    <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1e1e24] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">P</kbd> Pen</span>
+                    <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1e1e24] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">R</kbd> Rect</span>
+                    <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1e1e24] border border-zinc-200 dark:border-white/[0.1] text-zinc-500">T</kbd> Text</span>
                   </div>
                 </div>
               </motion.div>
@@ -1040,7 +1039,7 @@ export default function SketchToUI() {
         </div>
 
         {/* Right Panel: Result */}
-        <div className={`flex flex-col bg-zinc-50 dark:bg-[#09090B] border-l border-zinc-200 dark:border-white/[0.05] transition-all duration-700 ease-in-out relative ${generated ? 'w-1/2' : 'w-0 overflow-hidden'}`}>
+        <div className={`flex flex-col bg-zinc-50 dark:bg-[#111113] border-l border-zinc-200 dark:border-white/[0.08] transition-all duration-700 ease-in-out relative ${generated ? 'w-1/2' : 'w-0 overflow-hidden'}`}>
           <AnimatePresence mode="wait">
             {generationState === 'idle' && (
               <motion.div 
@@ -1050,12 +1049,12 @@ export default function SketchToUI() {
                 exit={{ opacity: 0, scale: 1.05 }}
                 className="flex-1 flex flex-col items-center justify-center p-12 text-center"
               >
-                <div className="w-24 h-24 bg-white dark:bg-white/[0.02] rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-zinc-200 dark:shadow-none border border-zinc-100 dark:border-white/[0.05]">
+                <div className="w-24 h-24 bg-white dark:bg-[#1a1a1f] rounded-none flex items-center justify-center mb-8 shadow-lg shadow-zinc-200 dark:shadow-none border border-zinc-100 dark:border-white/[0.08]">
                   <Wand2 className="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3 tracking-tight">Ready to Generate</h3>
                 <p className="text-sm text-zinc-500 max-w-xs leading-relaxed">
-                  Sketch your interface on the left and click <span className="text-zinc-900 dark:text-white font-bold uppercase tracking-wider text-[10px] bg-zinc-100 dark:bg-white/[0.05] px-2 py-1 rounded-lg mx-1">Generate UI</span> to see layout variants.
+                  Sketch your interface on the left and click <span className="text-zinc-900 dark:text-white font-bold uppercase tracking-wider text-[10px] bg-zinc-100 dark:bg-[#1e1e24] px-2 py-1 rounded-none mx-1">Generate UI</span> to see layout variants.
                 </p>
               </motion.div>
             )}
@@ -1074,12 +1073,12 @@ export default function SketchToUI() {
                       <span className="text-zinc-400">{generationState === 'processing_variants' ? 'Generating Variants' : 'Generating Code'}</span>
                       <span className="text-zinc-900 dark:text-white">Processing...</span>
                     </div>
-                    <Progress value={45} className="h-1.5 rounded-full bg-zinc-100 dark:bg-white/[0.05]" />
+                    <Progress value={45} className="h-1.5 rounded-none bg-zinc-100 dark:bg-[#1e1e24]" />
                   </div>
 
                   <div className="grid grid-cols-1 gap-6">
                     {[1, 2, 3].map(i => (
-                      <Card key={i} className="rounded-3xl border-dashed border-zinc-200 dark:border-white/[0.1] bg-transparent overflow-hidden">
+                      <Card key={i} className="rounded-none border-dashed border-zinc-200 dark:border-white/[0.1] bg-transparent overflow-hidden">
                         <CardContent className="p-0 aspect-[16/10] flex items-center justify-center">
                           <Skeleton className="w-full h-full rounded-none" />
                         </CardContent>
@@ -1088,15 +1087,15 @@ export default function SketchToUI() {
                   </div>
                 </div>
 
-                <Collapsible defaultOpen className="mt-10 border border-zinc-200 dark:border-white/[0.05] rounded-3xl p-6 bg-white dark:bg-white/[0.02] shadow-xl shadow-zinc-200/50 dark:shadow-none">
+                <Collapsible defaultOpen className="mt-10 border border-zinc-200 dark:border-white/[0.08] rounded-none p-6 bg-white dark:bg-[#1a1a1f] shadow-xl shadow-zinc-200/50 dark:shadow-none">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <div className="w-2 h-2 rounded-none bg-green-500 animate-pulse" />
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Agent Activity Log</h4>
                     </div>
                     <CollapsibleTrigger
                       render={
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none">
                           <ChevronDown className="h-4 w-4" />
                         </Button>
                       }
@@ -1136,13 +1135,13 @@ export default function SketchToUI() {
                     <Card 
                       key={variant.id}
                       onClick={() => handleSelectVariant(variant.id)}
-                      className={`cursor-pointer transition-all duration-500 overflow-hidden group relative rounded-[2rem] border-2 ${
+                      className={`cursor-pointer transition-all duration-500 overflow-hidden group relative rounded-none border-2 ${
                         selectedVariantId === variant.id 
-                          ? 'border-zinc-900 dark:border-white shadow-2xl shadow-zinc-300 dark:shadow-none scale-[1.02]' 
-                          : 'border-transparent bg-white dark:bg-white/[0.02] hover:scale-[1.01] hover:shadow-xl'
+                          ? 'border-zinc-900 dark:border-white shadow-lg shadow-zinc-300 dark:shadow-none scale-[1.02]' 
+                          : 'border-transparent bg-white dark:bg-[#1a1a1f] hover:scale-[1.01] hover:shadow-xl'
                       }`}
                     >
-                      <div className="aspect-[16/10] bg-zinc-100 dark:bg-white/[0.05] relative overflow-hidden">
+                      <div className="aspect-[16/10] bg-zinc-100 dark:bg-[#1e1e24] relative overflow-hidden">
                         <img 
                           src={variant.thumbnail} 
                           alt={variant.label}
@@ -1155,7 +1154,7 @@ export default function SketchToUI() {
                           {variant.tags.map((tag, idx) => (
                             <div 
                               key={idx}
-                              className="absolute bg-white/90 dark:bg-black/90 text-zinc-900 dark:text-white text-[9px] px-2 py-1 font-bold uppercase tracking-widest rounded-lg shadow-xl backdrop-blur-md border border-white/20 dark:border-white/10"
+                              className="absolute bg-white/90 dark:bg-black/90 text-zinc-900 dark:text-white text-[9px] px-2 py-1 font-bold uppercase tracking-widest rounded-none shadow-xl backdrop-blur-md border border-white/20 dark:border-white/10"
                               style={{
                                 top: `${20 + idx * 18}%`,
                                 left: `${10 + (idx % 2) * 45}%`,
@@ -1167,7 +1166,7 @@ export default function SketchToUI() {
                         </div>
 
                         {selectedVariantId === variant.id && (
-                          <div className="absolute top-6 right-6 bg-zinc-900 dark:bg-white text-white dark:text-black w-10 h-10 rounded-2xl flex items-center justify-center z-10 shadow-2xl animate-in zoom-in duration-300">
+                          <div className="absolute top-6 right-6 bg-zinc-900 dark:bg-zinc-200 text-white dark:text-zinc-900 w-10 h-10 rounded-none flex items-center justify-center z-10 shadow-lg animate-in zoom-in duration-300">
                             <Check className="w-6 h-6" />
                           </div>
                         )}
@@ -1175,7 +1174,7 @@ export default function SketchToUI() {
                       <CardHeader className="p-6">
                         <div className="flex items-center justify-between mb-2">
                           <CardTitle className="text-lg font-bold tracking-tight">{variant.label}</CardTitle>
-                          <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full">
+                          <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-none">
                             {variant.complexity}
                           </Badge>
                         </div>
@@ -1201,10 +1200,10 @@ export default function SketchToUI() {
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-10 p-8 rounded-[2rem] border border-zinc-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] shadow-2xl shadow-zinc-200 dark:shadow-none"
+                    className="mb-10 p-8 rounded-none border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#1a1a1f] shadow-lg shadow-zinc-200 dark:shadow-none"
                   >
                     <div className="flex items-center gap-4 mb-6">
-                      <div className="w-10 h-10 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center shadow-lg">
+                      <div className="w-10 h-10 rounded-none bg-zinc-900 dark:bg-zinc-200 flex items-center justify-center shadow-lg">
                         <Wand2 className="w-5 h-5 text-white dark:text-black" />
                       </div>
                       <div className="flex flex-col">
@@ -1217,12 +1216,12 @@ export default function SketchToUI() {
                         placeholder="e.g. 'Make the hero section larger' or 'Add a pricing table below features'..."
                         value={tweakPrompt}
                         onChange={(e) => setTweakPrompt(e.target.value)}
-                        className="min-h-[100px] text-sm rounded-2xl border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-transparent resize-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white p-4"
+                        className="min-h-[100px] text-sm rounded-none border-zinc-200 dark:border-white/[0.1] bg-zinc-50 dark:bg-transparent resize-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white p-4"
                       />
                       <Button 
                         onClick={handleTweak}
                         disabled={!tweakPrompt.trim() || isTweaking}
-                        className="w-full h-12 text-xs font-bold uppercase tracking-widest rounded-2xl shadow-lg transition-all active:scale-95"
+                        className="w-full h-12 text-xs font-bold uppercase tracking-widest rounded-none shadow-lg transition-all active:scale-95"
                       >
                         {isTweaking ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -1235,11 +1234,11 @@ export default function SketchToUI() {
                   </motion.div>
                 )}
 
-                <div className="mt-auto pt-10 sticky bottom-0 bg-zinc-50/80 dark:bg-[#09090B]/80 backdrop-blur-md">
+                <div className="mt-auto pt-10 sticky bottom-0 bg-zinc-50/80 dark:bg-[#111113]/80 backdrop-blur-md">
                   <Button 
                     onClick={handleConfirmVariant}
                     disabled={!selectedVariantId || isTweaking}
-                    className="w-full rounded-2xl h-14 text-sm font-bold uppercase tracking-widest shadow-2xl shadow-zinc-300 dark:shadow-none"
+                    className="w-full rounded-none h-14 text-sm font-bold uppercase tracking-widest shadow-lg shadow-zinc-300 dark:shadow-none"
                   >
                     Confirm Selection
                   </Button>
@@ -1262,9 +1261,9 @@ export default function SketchToUI() {
 
                 <div className="space-y-4 mb-10">
                   {componentTags.map(tag => (
-                    <div key={tag.id} className="flex items-center justify-between p-5 rounded-2xl border border-zinc-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] shadow-sm hover:shadow-md transition-all group">
+                    <div key={tag.id} className="flex items-center justify-between p-5 rounded-none border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#1a1a1f] shadow-sm hover:shadow-md transition-all group">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-zinc-100 dark:bg-white/[0.05] rounded-xl flex items-center justify-center text-xs font-bold group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors">
+                        <div className="w-12 h-12 bg-zinc-100 dark:bg-[#1e1e24] rounded-none flex items-center justify-center text-xs font-bold group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-zinc-300 dark:group-hover:text-zinc-900 transition-colors">
                           {tag.id}
                         </div>
                         <div>
@@ -1272,7 +1271,7 @@ export default function SketchToUI() {
                           <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{tag.type}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="rounded-full px-3 py-1 font-bold uppercase tracking-widest text-[9px]">Detected</Badge>
+                      <Badge variant="outline" className="rounded-none px-3 py-1 font-bold uppercase tracking-widest text-[9px]">Detected</Badge>
                     </div>
                   ))}
                 </div>
@@ -1280,7 +1279,7 @@ export default function SketchToUI() {
                 <div className="mt-auto pt-10">
                   <Button 
                     onClick={handleConfirmTags}
-                    className="w-full rounded-2xl h-14 text-sm font-bold uppercase tracking-widest shadow-2xl shadow-zinc-300 dark:shadow-none"
+                    className="w-full rounded-none h-14 text-sm font-bold uppercase tracking-widest shadow-lg shadow-zinc-300 dark:shadow-none"
                   >
                     Confirm Components
                   </Button>
@@ -1309,17 +1308,17 @@ export default function SketchToUI() {
                         <button
                           key={t.id}
                           onClick={() => setTheme(t)}
-                          className={`p-6 rounded-[2rem] border-2 text-left transition-all duration-500 ${
+                          className={`p-6 rounded-none border-2 text-left transition-all duration-500 ${
                             theme.id === t.id 
-                              ? 'border-zinc-900 dark:border-white bg-white dark:bg-white/[0.05] shadow-2xl scale-[1.05]' 
-                              : 'border-zinc-200 dark:border-white/[0.05] bg-transparent hover:border-zinc-400'
+                              ? 'border-zinc-900 dark:border-white bg-white dark:bg-[#1e1e24] shadow-lg scale-[1.05]' 
+                              : 'border-zinc-200 dark:border-white/[0.08] bg-transparent hover:border-zinc-400'
                           }`}
                         >
                           <p className="text-sm font-bold mb-4 tracking-tight">{t.name}</p>
                           <div className="flex gap-2">
-                            <div className={`w-8 h-8 rounded-xl ${t.primary} border border-black/10 shadow-sm`} />
-                            <div className={`w-8 h-8 rounded-xl ${t.secondary} border border-black/10 shadow-sm`} />
-                            <div className={`w-8 h-8 rounded-xl ${t.bg} border border-black/10 shadow-sm`} />
+                            <div className={`w-8 h-8 rounded-none ${t.primary} border border-black/10 shadow-sm`} />
+                            <div className={`w-8 h-8 rounded-none ${t.secondary} border border-black/10 shadow-sm`} />
+                            <div className={`w-8 h-8 rounded-none ${t.bg} border border-black/10 shadow-sm`} />
                           </div>
                         </button>
                       ))}
@@ -1333,10 +1332,10 @@ export default function SketchToUI() {
                         <button
                           key={f.id}
                           onClick={() => setFont(f)}
-                          className={`p-6 rounded-[2rem] border-2 text-left transition-all duration-500 ${
+                          className={`p-6 rounded-none border-2 text-left transition-all duration-500 ${
                             font.id === f.id 
-                              ? 'border-zinc-900 dark:border-white bg-white dark:bg-white/[0.05] shadow-2xl scale-[1.02]' 
-                              : 'border-zinc-200 dark:border-white/[0.05] bg-transparent hover:border-zinc-400'
+                              ? 'border-zinc-900 dark:border-white bg-white dark:bg-[#1e1e24] shadow-lg scale-[1.02]' 
+                              : 'border-zinc-200 dark:border-white/[0.08] bg-transparent hover:border-zinc-400'
                           }`}
                         >
                           <p className={`text-2xl ${f.class} tracking-tight`}>{f.name}</p>
@@ -1350,7 +1349,7 @@ export default function SketchToUI() {
                 <div className="mt-auto pt-10">
                   <Button 
                     onClick={handleConfirmPalettes}
-                    className="w-full rounded-2xl h-14 text-sm font-bold uppercase tracking-widest shadow-2xl shadow-zinc-300 dark:shadow-none"
+                    className="w-full rounded-none h-14 text-sm font-bold uppercase tracking-widest shadow-lg shadow-zinc-300 dark:shadow-none"
                   >
                     Generate Final Code
                   </Button>
@@ -1366,40 +1365,40 @@ export default function SketchToUI() {
                 className="flex-1 flex flex-col overflow-hidden"
               >
                 {/* Result Toolbar */}
-                <div className="h-16 border-b border-zinc-200 dark:border-white/[0.05] bg-white/80 dark:bg-[#09090B]/80 backdrop-blur-xl flex items-center justify-between px-6 sticky top-0 z-20">
+                <div className="h-16 border-b border-zinc-200 dark:border-white/[0.08] bg-white/80 dark:bg-[#111113]/80 backdrop-blur-xl flex items-center justify-between px-6 sticky top-0 z-20">
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center bg-zinc-100 dark:bg-white/[0.05] p-1 rounded-xl">
+                    <div className="flex items-center bg-zinc-100 dark:bg-[#1e1e24] p-1 rounded-none">
                       <button 
                         onClick={() => setViewMode('preview')}
-                        className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all duration-300 flex items-center gap-2 ${viewMode === 'preview' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+                        className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-none transition-all duration-300 flex items-center gap-2 ${viewMode === 'preview' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
                       >
                         <Monitor className="w-4 h-4" /> Preview
                       </button>
                       <button 
                         onClick={() => setViewMode('code')}
-                        className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all duration-300 flex items-center gap-2 ${viewMode === 'code' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+                        className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-none transition-all duration-300 flex items-center gap-2 ${viewMode === 'code' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
                       >
                         <Code2 className="w-4 h-4" /> React Code
                       </button>
                     </div>
 
                     {viewMode === 'preview' && (
-                      <div className="flex items-center bg-zinc-100 dark:bg-white/[0.05] p-1 rounded-xl ml-2">
+                      <div className="flex items-center bg-zinc-100 dark:bg-[#1e1e24] p-1 rounded-none ml-2">
                         <button 
                           onClick={() => setDeviceMode('desktop')}
-                          className={`p-2 rounded-lg transition-all ${deviceMode === 'desktop' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500'}`}
+                          className={`p-2 rounded-none transition-all ${deviceMode === 'desktop' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500'}`}
                         >
                           <Monitor className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => setDeviceMode('tablet')}
-                          className={`p-2 rounded-lg transition-all ${deviceMode === 'tablet' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500'}`}
+                          className={`p-2 rounded-none transition-all ${deviceMode === 'tablet' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500'}`}
                         >
                           <Tablet className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => setDeviceMode('mobile')}
-                          className={`p-2 rounded-lg transition-all ${deviceMode === 'mobile' ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500'}`}
+                          className={`p-2 rounded-none transition-all ${deviceMode === 'mobile' ? 'bg-white dark:bg-[#222228] text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500'}`}
                         >
                           <Smartphone className="w-4 h-4" />
                         </button>
@@ -1437,7 +1436,7 @@ export default function SketchToUI() {
                           variant="outline" 
                           size="sm" 
                           onClick={handleCopy}
-                          className="h-9 text-[10px] font-bold uppercase tracking-widest rounded-xl border-zinc-200 dark:border-white/[0.1]"
+                          className="h-9 text-[10px] font-bold uppercase tracking-widest rounded-none border-zinc-200 dark:border-white/[0.1]"
                         >
                           {isCopied ? <Check className="w-3.5 h-3.5 mr-2" /> : <Copy className="w-3.5 h-3.5 mr-2" />}
                           {isCopied ? 'Copied' : 'Copy Code'}
@@ -1446,7 +1445,7 @@ export default function SketchToUI() {
                           variant="outline" 
                           size="sm" 
                           onClick={handleDownload}
-                          className="h-9 text-[10px] font-bold uppercase tracking-widest rounded-xl border-zinc-200 dark:border-white/[0.1]"
+                          className="h-9 text-[10px] font-bold uppercase tracking-widest rounded-none border-zinc-200 dark:border-white/[0.1]"
                         >
                           <Download className="w-3.5 h-3.5 mr-2" />
                           Download
@@ -1455,7 +1454,7 @@ export default function SketchToUI() {
                     )}
                     
                     <Button 
-                      className="h-9 text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-lg"
+                      className="h-9 text-[10px] font-bold uppercase tracking-widest rounded-none shadow-lg"
                       onClick={() => setGenerationState('idle')}
                     >
                       <HistoryIcon className="w-3.5 h-3.5 mr-2" />
@@ -1465,20 +1464,20 @@ export default function SketchToUI() {
                 </div>
 
                 {/* Result Content */}
-                <div className="flex-1 overflow-auto bg-zinc-50 dark:bg-[#09090B] p-8 flex items-center justify-center relative">
+                <div className="flex-1 overflow-auto bg-zinc-50 dark:bg-[#111113] p-8 flex items-center justify-center relative">
                   {viewMode === 'preview' ? (
                     <motion.div 
                       layout
-                      className={`bg-white dark:bg-[#09090B] border border-zinc-200 dark:border-white/[0.1] shadow-2xl dark:shadow-none transition-all duration-500 overflow-hidden relative ${
-                        deviceMode === 'desktop' ? 'w-full max-w-5xl aspect-[16/10] rounded-xl' : 
-                        deviceMode === 'tablet' ? 'w-[768px] aspect-[3/4] rounded-2xl' : 
-                        'w-[375px] aspect-[9/19] rounded-[3rem] border-8 border-zinc-900 dark:border-zinc-800'
+                      className={`bg-white dark:bg-[#111113] border border-zinc-200 dark:border-white/[0.1] shadow-lg dark:shadow-none transition-all duration-500 overflow-hidden relative ${
+                        deviceMode === 'desktop' ? 'w-full max-w-5xl aspect-[16/10] rounded-none' : 
+                        deviceMode === 'tablet' ? 'w-[768px] aspect-[3/4] rounded-none' : 
+                        'w-[375px] aspect-[9/19] rounded-none border-8 border-zinc-900 dark:border-zinc-800'
                       }`}
                     >
                       {deviceMode === 'mobile' && (
                         <>
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-900 dark:bg-zinc-800 rounded-b-2xl z-30" />
-                          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-zinc-700 z-30 ml-8" />
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-900 dark:bg-zinc-800 rounded-none z-30" />
+                          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-none bg-zinc-700 z-30 ml-8" />
                         </>
                       )}
 
@@ -1492,16 +1491,16 @@ export default function SketchToUI() {
                           style={activeStyles.border}
                         >
                           <div 
-                            className={`w-24 h-6 ${!useCustomStyles ? theme.secondary : ''} rounded-lg animate-pulse`} 
+                            className={`w-24 h-6 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                             style={activeStyles.secondary}
                           />
                           <div className="flex gap-6">
                             <div 
-                              className={`w-16 h-3 ${!useCustomStyles ? theme.secondary : ''} rounded-full animate-pulse`} 
+                              className={`w-16 h-3 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                               style={activeStyles.secondary}
                             />
                             <div 
-                              className={`w-16 h-3 ${!useCustomStyles ? theme.secondary : ''} rounded-full animate-pulse`} 
+                              className={`w-16 h-3 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                               style={activeStyles.secondary}
                             />
                           </div>
@@ -1509,21 +1508,21 @@ export default function SketchToUI() {
                         <div className="flex-1 p-10 space-y-12">
                           <div className="space-y-6 max-w-2xl">
                             <div 
-                              className={`w-3/4 h-12 ${!useCustomStyles ? theme.secondary : ''} rounded-xl animate-pulse`} 
+                              className={`w-3/4 h-12 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                               style={activeStyles.secondary}
                             />
                             <div className="space-y-3">
                               <div 
-                                className={`w-full h-4 ${!useCustomStyles ? theme.secondary : ''} rounded-full animate-pulse`} 
+                                className={`w-full h-4 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                                 style={activeStyles.secondary}
                               />
                               <div 
-                                className={`w-5/6 h-4 ${!useCustomStyles ? theme.secondary : ''} rounded-full animate-pulse`} 
+                                className={`w-5/6 h-4 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                                 style={activeStyles.secondary}
                               />
                             </div>
                             <div 
-                              className={`w-40 h-12 ${!useCustomStyles ? theme.primary : ''} rounded-xl animate-pulse mt-8`} 
+                              className={`w-40 h-12 ${!useCustomStyles ? theme.primary : ''} rounded-none animate-pulse mt-8`} 
                               style={activeStyles.primary}
                             />
                           </div>
@@ -1531,15 +1530,15 @@ export default function SketchToUI() {
                             {[1, 2, 3].map(i => (
                               <div key={i} className="space-y-4">
                                 <div 
-                                  className={`aspect-video ${!useCustomStyles ? theme.secondary : ''} rounded-2xl animate-pulse`} 
+                                  className={`aspect-video ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                                   style={activeStyles.secondary}
                                 />
                                 <div 
-                                  className={`w-3/4 h-4 ${!useCustomStyles ? theme.secondary : ''} rounded-full animate-pulse`} 
+                                  className={`w-3/4 h-4 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse`} 
                                   style={activeStyles.secondary}
                                 />
                                 <div 
-                                  className={`w-1/2 h-3 ${!useCustomStyles ? theme.secondary : ''} rounded-full animate-pulse opacity-50`} 
+                                  className={`w-1/2 h-3 ${!useCustomStyles ? theme.secondary : ''} rounded-none animate-pulse opacity-50`} 
                                   style={activeStyles.secondary}
                                 />
                               </div>
@@ -1552,13 +1551,13 @@ export default function SketchToUI() {
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="w-full max-w-5xl h-full bg-[#0D0D0D] rounded-2xl border border-white/[0.05] shadow-2xl overflow-hidden flex flex-col"
+                      className="w-full max-w-5xl h-full bg-[#0D0D0D] rounded-none border border-white/[0.05] shadow-lg overflow-hidden flex flex-col"
                     >
                       <div className="h-10 bg-white/[0.02] border-b border-white/[0.05] flex items-center px-4 gap-2">
                         <div className="flex gap-1.5">
-                          <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/40" />
-                          <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/40" />
-                          <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/40" />
+                          <div className="w-3 h-3 rounded-none bg-red-500/20 border border-red-500/40" />
+                          <div className="w-3 h-3 rounded-none bg-amber-500/20 border border-amber-500/40" />
+                          <div className="w-3 h-3 rounded-none bg-emerald-500/20 border border-emerald-500/40" />
                         </div>
                         <div className="flex-1 text-center">
                           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">GeneratedComponent.tsx</span>
@@ -1601,7 +1600,7 @@ export default function GeneratedComponent() {
           The new standard for modern web development. Experience the future of UI design today.
         </p>
         <button 
-          className="${!useCustomStyles ? theme.primary.split(' ')[0] : ''} text-white px-8 py-4 font-bold rounded-2xl shadow-xl hover:scale-105 transition-transform"
+          className="${!useCustomStyles ? theme.primary.split(' ')[0] : ''} text-white px-8 py-4 font-bold rounded-none shadow-xl hover:scale-105 transition-transform"
           style={${useCustomStyles ? JSON.stringify({ backgroundColor: customTheme.primary }) : '{}'}}
         >
           Get Started
@@ -1611,11 +1610,11 @@ export default function GeneratedComponent() {
           {[1, 2, 3].map(i => (
             <div key={i} className="space-y-4">
               <div 
-                className="aspect-video ${!useCustomStyles ? theme.secondary.split(' ')[0] : ''} rounded-2xl" 
+                className="aspect-video ${!useCustomStyles ? theme.secondary.split(' ')[0] : ''} rounded-none" 
                 style={${useCustomStyles ? JSON.stringify({ backgroundColor: customTheme.secondary }) : '{}'}}
               />
-              <div className="h-4 w-3/4 bg-white/10 rounded-full" />
-              <div className="h-3 w-1/2 bg-white/5 rounded-full" />
+              <div className="h-4 w-3/4 bg-white/10 rounded-none" />
+              <div className="h-3 w-1/2 bg-white/5 rounded-none" />
             </div>
           ))}
         </div>
@@ -1633,7 +1632,8 @@ export default function GeneratedComponent() {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
@@ -1644,9 +1644,9 @@ function ToolButton({ icon: Icon, active, onClick, tooltip }: { icon: any, activ
       whileTap={{ scale: 0.95, y: 0 }}
       onClick={onClick}
       title={tooltip}
-      className={`p-2.5 rounded-xl transition-all duration-300 relative group ${
+      className={`p-2.5 rounded-none transition-all duration-300 relative group ${
         active 
-          ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-xl shadow-zinc-400/20 dark:shadow-none' 
+          ? 'bg-zinc-900 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-xl shadow-zinc-400/20 dark:shadow-none' 
           : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/[0.05] hover:text-zinc-900 dark:hover:text-zinc-200'
       }`}
     >
@@ -1654,7 +1654,7 @@ function ToolButton({ icon: Icon, active, onClick, tooltip }: { icon: any, activ
       {active && (
         <motion.div 
           layoutId="activeTool"
-          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-current"
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-none bg-current"
         />
       )}
     </motion.button>

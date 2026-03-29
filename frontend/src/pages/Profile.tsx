@@ -4,15 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { env } from '../config/env';
 import { useTheme } from '../contexts/ThemeContext';
 import { useUser, getInitials } from '../contexts/UserContext';
-
-const BrandLogo = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <circle cx="22" cy="22" r="8" fill="currentColor" fillOpacity="0.2" />
-    <rect x="14" y="2" width="16" height="16" rx="6" fill="currentColor" fillOpacity="0.4" />
-    <rect x="2" y="14" width="16" height="16" rx="6" fill="currentColor" fillOpacity="0.4" />
-    <rect x="2" y="2" width="16" height="16" rx="6" fill="currentColor" />
-  </svg>
-);
+import { DashboardLayout } from '../components/layout/DashboardLayout';
 
 export default function Profile() {
   const { isDark, toggleTheme } = useTheme();
@@ -98,7 +90,7 @@ export default function Profile() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-zinc-50 dark:bg-[#09090B] transition-colors duration-500">
+      <div className="min-h-screen w-full flex items-center justify-center bg-zinc-50 dark:bg-[#111113] transition-colors duration-500">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-zinc-900 dark:text-zinc-200 animate-spin" />
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Loading your profile...</p>
@@ -108,60 +100,27 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 dark:bg-[#09090B] text-zinc-900 dark:text-zinc-200 font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white/20 dark:selection:text-white transition-colors duration-500">
-      
-      {/* Top Navigation */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-[#09090B]/80 backdrop-blur-md border-b border-zinc-200 dark:border-white/[0.05] transition-colors duration-500">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/')}
-              className="p-2 -ml-2 rounded-none border border-transparent hover:border-zinc-200 dark:hover:border-white/[0.1] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.96]"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3 text-zinc-900 dark:text-zinc-200 transition-colors duration-500 cursor-pointer" onClick={() => navigate('/')}>
-              <div className="w-8 h-8 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-none flex items-center justify-center shadow-sm dark:shadow-none transition-colors duration-500">
-                <BrandLogo className="w-4 h-4" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">{env.appName}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={toggleTheme}
-              className="p-2 rounded-none border border-transparent hover:border-zinc-200 dark:hover:border-white/[0.1] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.96]"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-300 active:scale-[0.98]"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </div>
-        </div>
-      </nav>
-
+    <DashboardLayout>
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
         
         {/* Header / Cover Section */}
         <div className="relative mb-12">
           {/* Cover Photo */}
-          <div className="h-48 sm:h-64 w-full rounded-none bg-zinc-900 dark:bg-white/[0.04] overflow-hidden relative transition-colors duration-500">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent dark:from-[#09090B]/80 dark:via-[#09090B]/20 transition-opacity duration-500" />
+          <div className="h-48 sm:h-64 w-full rounded-none bg-zinc-900 dark:bg-[#1a1a1f] overflow-hidden relative transition-colors duration-500">
+            {/* Wave decorations */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)' }}>
+              <div className="absolute -top-20 -right-20 w-96 h-96 bg-indigo-500/[0.05] dark:bg-indigo-500/[0.1] rounded-full blur-[80px]" />
+              <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-purple-500/[0.05] dark:bg-purple-500/[0.08] rounded-full blur-[100px]" />
+              <div className="absolute top-10 left-[-10%] w-[300px] h-[300px] bg-blue-500/[0.03] dark:bg-blue-500/[0.05] rounded-full blur-[60px]" />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent dark:from-[#111113]/80 dark:via-[#111113]/20 transition-opacity duration-500" />
           </div>
 
           {/* Avatar & Basic Info */}
           <div className="absolute -bottom-6 left-8 flex items-end gap-6">
             <div className="relative group">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-none border-4 border-zinc-50 dark:border-[#09090B] overflow-hidden bg-zinc-900 dark:bg-white transition-colors duration-500 shadow-xl dark:shadow-none flex items-center justify-center">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-none border-4 border-zinc-50 dark:border-[#09090B] overflow-hidden bg-zinc-900 dark:bg-zinc-200 transition-colors duration-500 shadow-xl dark:shadow-none flex items-center justify-center">
                 <span className="text-3xl sm:text-4xl font-bold text-white dark:text-black">{getInitials(user)}</span>
               </div>
             </div>
@@ -181,7 +140,7 @@ export default function Profile() {
           <div className="lg:col-span-2 space-y-8">
             
             {/* Personal Information Card */}
-            <div className="bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.05] rounded-none p-6 sm:p-8 transition-all duration-500">
+            <div className="bg-white dark:bg-[#1a1a1f] border border-zinc-200 dark:border-white/[0.08] rounded-none p-6 sm:p-8 transition-all duration-500">
               <div className="mb-6">
                 <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-200 transition-colors duration-500">Personal Information</h2>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 transition-colors duration-500">Update your photo and personal details here.</p>
@@ -197,7 +156,7 @@ export default function Profile() {
                         type="text" 
                         value={formData.firstName}
                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                        className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                       />
                     </div>
                   </div>
@@ -209,7 +168,7 @@ export default function Profile() {
                         type="text" 
                         value={formData.lastName}
                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                        className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                       />
                     </div>
                   </div>
@@ -223,7 +182,7 @@ export default function Profile() {
                       type="text" 
                       value={formData.jobTitle}
                       onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                      className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                     />
                   </div>
                 </div>
@@ -236,7 +195,7 @@ export default function Profile() {
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                      className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                     />
                   </div>
                 </div>
@@ -249,7 +208,7 @@ export default function Profile() {
                       type="tel" 
                       value={formData.phoneNumber}
                       onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                      className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                     />
                   </div>
                 </div>
@@ -262,13 +221,13 @@ export default function Profile() {
           <div className="space-y-8">
             
             {/* Preferences Card */}
-            <div className="bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.05] rounded-none p-6 transition-all duration-500">
+            <div className="bg-white dark:bg-[#1a1a1f] border border-zinc-200 dark:border-white/[0.08] rounded-none p-6 transition-all duration-500">
               <h3 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-200 mb-4 transition-colors duration-500">Preferences</h3>
               
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-none bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/5 transition-colors duration-500">
+                <div className="flex items-center justify-between p-4 rounded-none bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/5 transition-colors duration-500">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white dark:bg-white/[0.02] rounded-none shadow-sm dark:shadow-none transition-colors duration-500">
+                    <div className="p-2 bg-white dark:bg-[#1a1a1f] rounded-none shadow-sm dark:shadow-none transition-colors duration-500">
                       <Bell className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
                     </div>
                     <div>
@@ -287,9 +246,9 @@ export default function Profile() {
                   </label>
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-none bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/5 transition-colors duration-500">
+                <div className="flex items-center justify-between p-4 rounded-none bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/5 transition-colors duration-500">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white dark:bg-white/[0.02] rounded-none shadow-sm dark:shadow-none transition-colors duration-500">
+                    <div className="p-2 bg-white dark:bg-[#1a1a1f] rounded-none shadow-sm dark:shadow-none transition-colors duration-500">
                       <Lock className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
                     </div>
                     <div>
@@ -305,9 +264,9 @@ export default function Profile() {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-none bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/5 transition-colors duration-500">
+                <div className="flex items-center justify-between p-4 rounded-none bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/5 transition-colors duration-500">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white dark:bg-white/[0.02] rounded-none shadow-sm dark:shadow-none transition-colors duration-500">
+                    <div className="p-2 bg-white dark:bg-[#1a1a1f] rounded-none shadow-sm dark:shadow-none transition-colors duration-500">
                       <Shield className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
                     </div>
                     <div>
@@ -323,11 +282,11 @@ export default function Profile() {
             </div>
 
             {/* Save Action */}
-            <div className="bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.05] rounded-none p-6 transition-all duration-500">
+            <div className="bg-white dark:bg-[#1a1a1f] border border-zinc-200 dark:border-white/[0.08] rounded-none p-6 transition-all duration-500">
               <button 
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-900 dark:bg-zinc-200 text-white dark:text-zinc-900 rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
               >
                 {isSaving ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -342,12 +301,12 @@ export default function Profile() {
 
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Change Password Modal */}
       {isChangingPassword && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-white dark:bg-white/[0.02] rounded-none p-8 shadow-2xl dark:shadow-none border border-zinc-200 dark:border-white/[0.05] animate-in zoom-in-95 duration-300">
+          <div className="w-full max-w-md bg-white dark:bg-[#1a1a1f] rounded-none p-8 shadow-2xl dark:shadow-none border border-zinc-200 dark:border-white/[0.08] animate-in zoom-in-95 duration-300">
             <div className="mb-6">
               <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-200">Change Password</h3>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">Enter your current and new password below.</p>
@@ -373,7 +332,7 @@ export default function Profile() {
                   required
                   value={passwordForm.oldPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 transition-all duration-500"
+                  className="w-full px-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 transition-all duration-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -383,7 +342,7 @@ export default function Profile() {
                   required
                   value={passwordForm.newPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 transition-all duration-500"
+                  className="w-full px-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 transition-all duration-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -393,7 +352,7 @@ export default function Profile() {
                   required
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-zinc-50 dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 transition-all duration-500"
+                  className="w-full px-4 py-3.5 bg-zinc-50 dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 transition-all duration-500"
                 />
               </div>
 
@@ -401,14 +360,14 @@ export default function Profile() {
                 <button 
                   type="button"
                   onClick={() => setIsChangingPassword(false)}
-                  className="flex-1 py-3.5 bg-transparent border border-zinc-200 dark:border-white/[0.05] text-zinc-900 dark:text-zinc-200 rounded-none font-semibold hover:border-zinc-900 dark:hover:border-white hover:bg-zinc-50 dark:hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                  className="flex-1 py-3.5 bg-transparent border border-zinc-200 dark:border-white/[0.08] text-zinc-900 dark:text-zinc-200 rounded-none font-semibold hover:border-zinc-900 dark:hover:border-white hover:bg-zinc-50 dark:hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
+                  className="flex-1 py-3.5 bg-zinc-900 dark:bg-zinc-200 text-white dark:text-zinc-900 rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
                 >
                   {isSaving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Update'}
                 </button>
@@ -417,6 +376,6 @@ export default function Profile() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }

@@ -1,22 +1,56 @@
-.env
-
+# ========================
+# Python / Django
+# ========================
 __pycache__/
-__pycache__/*
-
 *.pyc
-.env
-
+*.pyo
+*.egg-info/
+*.egg
 .venv/
-.venv/*
+venv/
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+*.log
 
-new 4/
-new 4/*
+# ========================
+# Environment / Secrets
+# ========================
+.env
+.env.*
+!.env.example
 
+# ========================
+# Node / Frontend
+# ========================
 node_modules/
-node_modules/*
+frontend/dist/
+frontend/build/
+frontend/.vite/
+*.tsbuildinfo
 
+# ========================
+# IDE / Editor
+# ========================
 .vscode/
-.vscode/*
-
 .idea/
-.idea/*
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ========================
+# OS / System
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# Misc
+# ========================
+new 4/
+*.bak
+*.tmp

@@ -128,10 +128,10 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-zinc-50 dark:bg-[#09090B] text-zinc-900 dark:text-zinc-200 font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white/20 dark:selection:text-white transition-colors duration-500">
+    <div className="min-h-screen w-full flex bg-zinc-50 dark:bg-[#111113] text-zinc-900 dark:text-zinc-200 font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white/20 dark:selection:text-white transition-colors duration-500">
       
       {/* Left Panel - Branding/Visual (Hidden on mobile) */}
-      <div className="hidden lg:flex relative w-1/2 bg-zinc-900 dark:bg-white/[0.02] p-12 flex-col justify-between overflow-hidden transition-colors duration-500">
+      <div className="hidden lg:flex relative w-1/2 bg-zinc-900 dark:bg-[#1a1a1f] p-12 flex-col justify-between overflow-hidden transition-colors duration-500">
         {/* Background Image */}
         <img 
           src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
@@ -139,7 +139,7 @@ export default function Auth() {
           className="absolute inset-0 w-full h-full object-cover opacity-40 dark:opacity-20 mix-blend-luminosity transition-opacity duration-500"
         />
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent dark:from-[#09090B]/80 dark:via-[#09090B]/20 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent dark:from-[#111113]/80 dark:via-[#111113]/20 transition-opacity duration-500" />
 
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-3 text-white dark:text-zinc-200 transition-colors duration-500">
@@ -261,7 +261,7 @@ export default function Auth() {
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       onPaste={handleOtpPaste}
-                      className="w-12 h-14 text-center text-xl font-semibold bg-white dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500"
+                      className="w-12 h-14 text-center text-xl font-semibold bg-white dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500"
                     />
                   ))}
                 </div>
@@ -269,7 +269,7 @@ export default function Auth() {
                 <button 
                   type="submit" 
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-900 dark:bg-zinc-200 text-white dark:text-zinc-900 rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
                 >
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -322,7 +322,7 @@ export default function Auth() {
                               required
                               value={formData.firstName}
                               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                              className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                              className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                               placeholder="Jane" 
                             />
                           </div>
@@ -336,7 +336,7 @@ export default function Auth() {
                               required
                               value={formData.lastName}
                               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                              className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                              className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                               placeholder="Doe" 
                             />
                           </div>
@@ -352,7 +352,7 @@ export default function Auth() {
                             required
                             value={formData.username}
                             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                            className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                             placeholder="janedoe" 
                           />
                         </div>
@@ -369,7 +369,7 @@ export default function Auth() {
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                        className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                         placeholder="name@company.com" 
                       />
                     </div>
@@ -398,7 +398,7 @@ export default function Auth() {
                           required
                           value={formData.password}
                           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="w-full pl-12 pr-12 py-3.5 bg-white dark:bg-[#09090B] border border-black/5 dark:border-white/[0.05] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
+                          className="w-full pl-12 pr-12 py-3.5 bg-white dark:bg-[#111113] border border-black/5 dark:border-white/[0.08] shadow-sm dark:shadow-none rounded-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white/20 focus:border-transparent transition-all duration-500 sm:text-sm" 
                           placeholder="••••••••" 
                         />
                         <button 
@@ -415,7 +415,7 @@ export default function Auth() {
                   <button 
                     type="submit" 
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] mt-6 disabled:opacity-70 disabled:pointer-events-none"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-900 dark:bg-zinc-200 text-white dark:text-zinc-900 rounded-none font-semibold border border-zinc-900 dark:border-white/[0.1] hover:bg-transparent hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-300 active:scale-[0.98] mt-6 disabled:opacity-70 disabled:pointer-events-none"
                   >
                     {isLoading ? (
                       <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -434,7 +434,7 @@ export default function Auth() {
                         guestLogin();
                         navigate('/');
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-transparent border border-zinc-200 dark:border-white/[0.05] text-zinc-900 dark:text-zinc-200 rounded-none font-semibold hover:border-zinc-900 dark:hover:border-white hover:bg-zinc-50 dark:hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-transparent border border-zinc-200 dark:border-white/[0.08] text-zinc-900 dark:text-zinc-200 rounded-none font-semibold hover:border-zinc-900 dark:hover:border-white hover:bg-zinc-50 dark:hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
                     >
                       Continue as Guest
                     </button>
